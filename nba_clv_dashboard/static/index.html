@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NBA evaluation — calibration & CLV (demo)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+    main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+    h1 { font-size: 1.35rem; color: #38bdf8; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+    @media (min-width: 800px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; }
+    .kpi { font-size: 2rem; font-weight: 700; color: #4ade80; }
+    p.note { font-size: 0.875rem; color: #94a3b8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>NBA model evaluation (demo metrics)</h1>
+  <p class="note">Swap <code>/api/metrics</code> payload with your backtest output. Non-goals: real-time odds ingestion.</p>
+  <div class="grid">
+    <div class="card">
+      <div>Holdout accuracy</div>
+      <div class="kpi" id="acc">—</div>
+      <p class="note">Brier: <span id="brier">—</span> · n: <span id="n">—</span></p>
+    </div>
+    <div class="card">
+      <div>CLV summary (toy)</div>
+      <p id="clv">—</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1rem;">
+    <canvas id="cal" height="120"></canvas>
+  </div>
+  <div class="card" style="margin-top:1rem;">
+    <canvas id="roll" height="120"></canvas>
+  </div>
+</main>
+<script>
+async function load() {
+  const r = await fetch('/api/metrics');
+  const d = await r.json();
+  document.getElementById('acc').textContent = (d.overall_accuracy * 100).toFixed(1) + '%';
+  document.getElementById('brier').textContent = d.brier;
+  document.getElementById('n').textContent = d.n_test;
+  const clv = d.clv_summary;
+  document.getElementById('clv').textContent = `Mean CLV: ${clv.mean_clv_cents}¢ · Bets +CLV: ${(clv.pct_bets_positive_clv * 100).toFixed(0)}%. ${clv.closing_line_value_note}`;
+
+  const bins = d.calibration;
+  new Chart(document.getElementById('cal'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Calibration (pred vs observed)',
+        data: bins.map(b => ({ x: b.pred_mean, y: b.obs_freq })),
+        backgroundColor: '#38bdf8',
+      }, {
+        label: 'Perfect',
+        data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+        showLine: true,
+        borderColor: '#64748b',
+        pointRadius: 0,
+      }],
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: 'Mean predicted' }, min: 0, max: 1 },
+        y: { title: { display: true, text: 'Observed freq' }, min: 0, max: 1 },
+      },
+    },
+  });
+
+  const w = d.rolling_accuracy;
+  new Chart(document.getElementById('roll'), {
+    type: 'line',
+    data: {
+      labels: w.map(x => 'W' + x.week),
+      datasets: [{
+        label: 'Rolling accuracy',
+        data: w.map(x => x.acc),
+        borderColor: '#4ade80',
+        tension: 0.2,
+      }],
+    },
+    options: {
+      scales: { y: { min: 0.55, max: 0.75 } },
+    },
+  });
+}
+load();
+</script>
+</body>
+</html>
