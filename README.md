@@ -1,44 +1,58 @@
-# nba-clv-dashboard — flagship: sports ML evaluation
+# nba-clv-dashboard
 
 [![CI](https://github.com/ianalloway/nba-clv-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/ianalloway/nba-clv-dashboard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Employer-facing narrative:** This is my **top public repo** for sports-shaped ML: it shows how I communicate **calibration**, **rolling accuracy**, and **CLV-style** eval—not just a headline metric. Pair it with **[nba-ratings](https://github.com/ianalloway/nba-ratings)** (Elo / logistic / Kelly primitives on PyPI as `nba-edge`) and **[line-shop-cli](https://github.com/ianalloway/line-shop-cli)** for odds normalization + optional Kelly.
+FastAPI + Chart.js evaluation dashboard for calibration, rolling accuracy, and CLV-style reporting.
 
-**One-pager for recruiters:** [Sports ML evaluation case study](https://ianalloway.xyz/papers/sports-ml-evaluation-case-study.html) (open → Print → Save as PDF).
+## Why This Repo Matters
 
----
+Most public ML repos stop at a headline metric. This one is about how to communicate whether a model is actually trustworthy:
 
-**Problem:** Hiring teams see “68% accuracy” everywhere — they rarely see **calibration**, **rolling stability**, and **closing-line language** in one glance.
+- calibration instead of just raw accuracy
+- rolling performance instead of one static score
+- CLV-style reporting to talk about market-aware outcomes
+- clean API + frontend surface for presenting evaluation to non-ML stakeholders
 
-**Solution:** **FastAPI** serves `/api/metrics` (**demo JSON** today) and a **single-page Chart.js** view: calibration scatter, rolling accuracy, CLV summary block.
+**One-pager for recruiters:** [Sports ML evaluation case study](https://ianalloway.xyz/papers/sports-ml-evaluation-case-study.html)
+
+## What It Does
+
+FastAPI serves `/api/metrics` and the frontend renders:
+
+- calibration scatter
+- rolling accuracy chart
+- KPI/summary block for CLV-style metrics
+- a lightweight, portable demo for model evaluation storytelling
+
+## Quick Start
 
 ```bash
 pip install -e .
 uvicorn nba_clv_dashboard.app:app --reload --port 8765
-# open http://127.0.0.1:8765
 ```
 
-## Swap your metrics
+Open `http://127.0.0.1:8765`.
 
-Replace `demo_metrics.demo_payload()` with a loader from your parquet / eval pipeline. Keep the same JSON shape or adjust `static/index.html`.
+## Swap Your Metrics
+
+Replace `demo_metrics.demo_payload()` with a loader from your parquet or evaluation pipeline. Keep the same JSON shape or adjust `static/index.html`.
 
 ## Non-goals
 
-- **Not** a sportsbook integration — **evaluation honesty demo** only.
-- **No** auth / multi-tenant — add if you deploy publicly.
+- Not a sportsbook integration
+- Not a multi-tenant analytics product
+- Not a prediction engine by itself
 
 ## CI
 
-pytest hits `/api/metrics` with httpx.
+`pytest` hits `/api/metrics` with `httpx`.
 
-## Suggested GitHub topics
+## Related Repos
 
-`fastapi` · `nba` · `calibration` · `sports-analytics` · `chartjs`
-
-## Screenshot
-
-_Add a browser screenshot of the two charts + KPI row._
+- [`nba-ratings`](https://github.com/ianalloway/nba-ratings): reusable Elo / logistic / Kelly primitives
+- [`sports-betting-ml`](https://github.com/ianalloway/sports-betting-ml): modeling demo and value-bet pipeline
+- [`backtest-report-gen`](https://github.com/ianalloway/backtest-report-gen): static report generation from evaluation JSON
 
 ## License
 
